@@ -1,0 +1,14 @@
+Intersect 2.0
+author: ohdae
+-------------
+
+To-Do List:
+
+* SNMP Scanner
+* O/S Fingerprinting for NetworkMap() feature
+* SSH/SFTP Support for report.tar.gz transfer
+* Fix exploitCheck() feature
+* Fix Temp_Dir creation process
+* Add software fingerprints & locations to getProtection() feature
+* Complete service fingerprint listing for NetworkMap() feature
+* .....
