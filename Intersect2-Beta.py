@@ -7,7 +7,8 @@
 # The ToDo-List will be updated frequently to show changes, upcoming features, bug fixes, etc.
 # if you find any bugs or have any suggestions or comments, please contact the developer
 #
-
+# Quite a few of these features are being reworked, things are being added, etc.
+# Updates will be rolled out frequently as I work through the code and fix things. Enjoy!
 
 import sys, os, re
 from subprocess import Popen,PIPE,STDOUT,call
@@ -43,7 +44,7 @@ def usage():
    print("  -n --network        detailed network info")
    print("  -l --live-hosts      find live hosts on network")
    print("  -c --credentials    locate and save user/system credentials")
-   print("  -p --protection     locate commonly installed AV/FW's, etc")
+   print("  -p --protection     locate commonly installed AV, FW's and extras")
    print("  -a --all-tests      run all and archive final reports *scapy required")
    print("  -t --tar            make archive of final reports")
    print("  -h --help           prints this menu")
@@ -60,6 +61,7 @@ def environment():
    if os.geteuid() != 0:
         print("[!] This script *must* be executed as root. If not, there will be errors and/or crashes.")
         print("[!] Intersect 2.0 is shutting down....Please run again as root")
+        # if user is not root, ask if they want to run exploitCheck() feature to find local root suggestions
         sys.exit()
    else:
         pass
@@ -99,16 +101,22 @@ def Gather_OS():
    file.close()
    os.system("ls -alh /usr/bin > bin.txt")
    os.system("ls -alh /usr/sbin > sbin.txt")
-   os.system("ls -al /etc/cron* > cronjobs.txt") 
+   os.system("ls -al /etc/cron* > cronjobs.txt")
+   os.system("ls -alhtr /media > media.txt")
+   os.system("ls -alhtr /mnt > mount.txt")
+   os.system("cat /etc/sysctl.conf > sysctl.txt")
+   os.system("find /var/log -type f -exec ls -la {} \; > loglist.txt")
    os.system("uname -a > distro_kernel.txt")
    os.system("df -hT > filesystem.txt")
    os.system("free -lt > memory.txt")
-   sysfiles = ["distro_kernel.txt","filesystem.txt","memory.txt"]
+   os.system("cat /proc/cpuinfo > cpuinfo.txt")
+   os.system("cat /proc/meminfo > meminfo.txt")
+   sysfiles = ["distro_kernel.txt","filesystem.txt","memory.txt","cpuinfo.txt","meminfo.txt"]
    content = ''
    for f in sysfiles:
        content = content + '\n' + open(f).read()
    open('SysInfo.txt','wb').write(content)
-   os.system("rm distro_kernel.txt filesystem.txt memory.txt")
+   os.system("rm distro_kernel.txt filesystem.txt memory.txt cpuinfo.txt meminfo.txt")
    os.mkdir("users/")
    os.chdir("users/")
    file = open("CurrentUser.txt" ,"a")
@@ -117,9 +125,10 @@ def Gather_OS():
    file.close()
    os.system("ls -alhR ~/ > userhome.txt")
    os.system("ls -alhR /home > allusers.txt")
+
    
 def GetCredentials():
-    # multi-thread and pull others
+    # Feature is being rewritten to speed up process and avoid non-root permission issues
     print("[-] Collecting user and system credentials....\n")
     os.mkdir(Temp_Dir+"/credentials")
     os.chdir(Temp_Dir+"/credentials/")
@@ -187,6 +196,8 @@ def NetworkInfo():
         shutil.copy2("/etc/hosts.deny", networkdir)
    if os.path.exists("/etc/hosts.allow") is True:
         shutil.copy2("/etc/hosts.allow", networkdir)
+   if os.path.exists("/etc/inetd.conf") is True:
+        shutil.copy2("/etc/inetd.conf", networkdir)
                
 def NetworkMap():
    # Combine ARP then portscan. Send IPs to list and iterate through for the scan
@@ -256,15 +267,17 @@ def NetworkMap():
   #  print mac
     
 def FindProtect():
-    # check ToDo-List for how this feature is being rewriten
-    # Update will be pushed at later time
+    # check ToDo-List for additional changes
+    # The os.system command runs all at once and is not efficient at all
+    # This is just a temporary way of doing it while I finish rewriting this feature and
+    # add the rest of the applications that we try to find. 
     
     print("[-] Finding system protection applications....\n")
     os.mkdir(Temp_Dir+"/protection")
     protectiondir = (Temp_Dir+"/protection")
     os.chdir(protectiondir)
-    if os.path.exists("/etc/snort/snort.conf") is True:
-        shutil.copy2("/etc/snort/snort.conf", Temp_Dir+"/configs/")
+    #if os.path.exists("/etc/snort/snort.conf") is True:
+    #    shutil.copy2("/etc/snort/snort.conf", Temp_Dir+"/configs/")
     print("[-] Serching for misc extras (netcat, perl, gcc, tcpdump, etc)....")
     os.system("""
     whereis truecrypt > tc.txt && whereis bulldog > bulldog.txt && whereis ufw > ufw.txt && 
@@ -281,7 +294,7 @@ def FindProtect():
     content = ''
     for f in extralists:
         content = content + '\n' + open(f).read()
-    open('Full.List','wb').write(content)
+    open('FullList','wb').write(content)
     os.system("rm *.txt")
 
 def exploitCheck():
