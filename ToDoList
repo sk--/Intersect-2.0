@@ -1,14 +1,22 @@
-Intersect 2.0
-author: ohdae
--------------
+Intersect 2.0 To-Do List
 
-To-Do List:
 
-* SNMP Scanner
-* O/S Fingerprinting for NetworkMap() feature
-* SSH/SFTP Support for report.tar.gz transfer
-* Fix exploitCheck() feature
+* SSH/SFTP Support for transfering report.tar.gz to a remote host
+* Fix exploitCheck() feature and non-root permission issues
+* Implement port-scanning after live-hosts are found
+* Identify services by port number via socket
+* Rewrite software fingerprints and locatons for getProtection() feature
+* SNMP Scanner/Enum
+* Create traceroute graph for NetworkMap()
 * Fix Temp_Dir creation process
-* Add software fingerprints & locations to getProtection() feature
-* Complete service fingerprint listing for NetworkMap() feature
-* .....
+* Find suid files
+* Add scrubme.py code as an option (hides your user presence from other users in 'who' 'w' 'last' and 'lastlog' commands)
+* Add bindshell listener as option (example: './Intersect.py --listen 4441 creates interactive shell on port 4441)
+* Fix the getGateway process. Right now, we assume you are using 192.168.1.0/24. New process will pull the gateway
+  from ifconfig using your local IP, drop the last octet and add .0/24 to grab your gateway.
+* Add process that dumps the plain-text from memory and sends to .txt file
+* *Maybe* add a tcp sniffing feature that the user can run as a background process and saves dump file for later retrieval
+* 
+
+
+If you have any ideas for this project or would like to help out, feel free to contact me
