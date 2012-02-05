@@ -3,12 +3,28 @@
 # email: bindshell@live.com  
 # http://github.com/ohdae/Intersect-2.0/ || http://bind.shell.la/projects/Intersect
 #
-# For the full script description, background, and future update plans check the ReadMe document
+# To see the full description of Intersect 2.0, view the attached ReadMe file.
 # The ToDo-List will be updated frequently to show changes, upcoming features, bug fixes, etc.
-# if you find any bugs or have any suggestions or comments, please contact the developer
+# If you find any bugs or have any suggestions or comments, please contact the developer
 #
 # Quite a few of these features are being reworked, things are being added, etc.
 # Updates will be rolled out frequently as I work through the code and fix things. Enjoy!
+#-------------------------------------------------------------------------------------------------
+#   Copyright (C) 2012  ohdae | bindshell@live.com
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#--------------------------------------------------------------------------------------------------
 
 import sys, os, re
 from subprocess import Popen,PIPE,STDOUT,call
