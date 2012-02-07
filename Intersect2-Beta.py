@@ -34,7 +34,7 @@ import tarfile
 import socket
 import random, string
 import logging
-import socket
+import struct
 
 cut = lambda s: str(s).split("\0",1)[0]
 
