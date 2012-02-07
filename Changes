@@ -1,0 +1,12 @@
+Intersect 2.0 | Changes Log
+
+
+02-05-2012
+Added: sysctl.conf copying, meminfo & cpuinfo gather, /var/log/ lists
+Contributor: ohdae
+
+02-06-2012
+Added: Function to clean username and IP address from 'w' 'who' 'last' and 'lastlog' commands.
+This will actively hide the users precense from other system users.
+Contributor: sk
+
