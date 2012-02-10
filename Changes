@@ -10,3 +10,8 @@ Added: Function to clean username and IP address from 'w' 'who' 'last' and 'last
 This will actively hide the users precense from other system users.
 Contributor: sk
 
+02-10-2012
+Fixed: Small syntax error in getCredentials() function.
+Contributor: ohdae
+
+
