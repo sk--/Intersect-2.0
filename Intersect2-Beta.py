@@ -174,7 +174,7 @@ def GetCredentials():
         shutil.copy2("/etc/master.passwd", Temp_Dir+"/credentials/")
     os.system('cat /etc/sudoers > sudoers.txt')
     if os.path.isfile("/etc/ssh/sshd_config") is True:
-        shutil.copy2("/etc/ssh/sshd_config", Temp_Dir+"credentials/") 
+        shutil.copy2("/etc/ssh/sshd_config", Temp_Dir+"/credentials/") 
     if os.path.isfile(Home_Dir+'/.ssh/id_dsa') is True:
         shutilcopy2(Home_Dir+'/.ssh/id_dsa', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+'/.ssh/id_dsa.pub') is True:
