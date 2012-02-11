@@ -10,3 +10,13 @@ Added: Function to clean username and IP address from 'w' 'who' 'last' and 'last
 This will actively hide the users precense from other system users.
 Contributor: sk
 
+02-10-2012
+Fixed minor syntax error in the getCredentials() feature.
+Contributor: ohdae
+
+02-10-2012
+Added: Semi-interactive TCP bind shell. The shell binds to the server port 443 and accepts connects via netcat.
+You can read files, make/delete folders, add user accounts, view processes, netstat, etc.
+I am soon adding a new custom shell that will bind over SSL and you will have a wide variety of features, such as live sniffing
+and the capability of running Intersect commands over the shell and installing add-on modules.
+Contributor: ohdae 
