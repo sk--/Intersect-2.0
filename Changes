@@ -11,7 +11,6 @@ This will actively hide the users precense from other system users.
 Contributor: sk
 
 02-10-2012
-<<<<<<< HEAD
 Fixed minor syntax error in the getCredentials() feature.
 Contributor: ohdae
 
@@ -21,9 +20,5 @@ You can read files, make/delete folders, add user accounts, view processes, nets
 I am soon adding a new custom shell that will bind over SSL and you will have a wide variety of features, such as live sniffing
 and the capability of running Intersect commands over the shell and installing add-on modules.
 Contributor: ohdae 
-=======
-Fixed: Small syntax error in getCredentials() function.
-Contributor: ohdae
 
 
->>>>>>> 574285d8db34c21061c61d542708bb302fa04aba

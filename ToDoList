@@ -1,5 +1,4 @@
 Intersect 2.0 To-Do List
-[x] marks completed task.
 
 
 * Fix exploitCheck() feature and non-root permission issues
@@ -9,20 +8,12 @@ Intersect 2.0 To-Do List
 * SNMP Scanner/Enum
 * Create traceroute graph for NetworkMap()
 * Fix Temp_Dir creation process
-<<<<<<< HEAD
-* Fix the getGateway process. Right now, we assume you are using 192.168.1.0/24. New process will pull the gateway
-  from ifconfig using your local IP, drop the last octet and add .0/24 to grab your gateway.
-* Add process that dumps the plain-text from memory and sends to .txt file
-=======
-* Find suid files
-[x] Add scrubme.py code as an option (hides your user presence from other users in 'who' 'w' 'last' and 'lastlog' commands)
-* Add bindshell listener as option (example: './Intersect.py --bind' opens SSL bindshell)
 * Fix the getGateway process. Right now, we assume you are using 192.168.1.0/24. New process will pull the gateway
   from ifconfig using your local IP, drop the last octet and add .0/24 to grab your gateway.
 * Add process that dumps the plain-text from memory and sends to .txt file
 * Write custom client to interact with --bind listener
 * Optionally send NetworkMap() output to be imported within Metasploit DB
->>>>>>> 574285d8db34c21061c61d542708bb302fa04aba
+
 
 
 If you have any ideas for this project or would like to help out, feel free to contact me
