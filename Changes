@@ -21,4 +21,7 @@ I am soon adding a new custom shell that will bind over SSL and you will have a 
 and the capability of running Intersect commands over the shell and installing add-on modules.
 Contributor: ohdae 
 
-
+02-14-2012
+Madechanges to how Intersect searches for installed packages, log files and running services.
+Added option to identify different Linux distro's and perform some of the searches as being specific to that distro.
+Eventually I will incorporate the distro-specific searches into all the other areas. 

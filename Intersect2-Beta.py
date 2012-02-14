@@ -79,6 +79,7 @@ def environment():
    global Home_Dir
    global Temp_Dir
    global kernel
+   global distro
    global User_Ip_Address
    global UTMP_STRUCT_SIZE    
    global LASTLOG_STRUCT_SIZE
@@ -127,6 +128,7 @@ def Gather_OS():
    os.mkdir(Temp_Dir+"/osinfo/")
    os.mkdir(Temp_Dir+"/configs/")
    os.chdir(Temp_Dir+"/osinfo/")
+   
    proc = Popen('ps aux',
                 shell=True, 
                 stdout=PIPE,
@@ -136,11 +138,29 @@ def Gather_OS():
    for items in output:
        file.write(items),
    file.close()
+
    os.system("ls -alh /usr/bin > bin.txt")
    os.system("ls -alh /usr/sbin > sbin.txt")
    os.system("ls -al /etc/cron* > cronjobs.txt")
    os.system("ls -alhtr /media > media.txt")
-   os.system("ls -alhtr /mnt > mount.txt")
+
+   if distro == "ubuntu":
+      os.system("dpkg -l > dpkg_list.txt")
+   elif distro == "arch":
+      os.system("pacman -Q > pacman_list.txt")
+   elif distro == "slackware":
+      os.system("ls /var/log/packages > packages_list.txt")
+   else:
+      print("[!] Package manager not supported. Listings of /usr/bin and /usr/sbin will still be provided.")
+   
+   if distro == "arch":
+      os.system("egrep '^DAEMONS' /etc/rc.conf > services_list.txt")
+   elif distro == "slackware":
+      os.system("ls -F /etc/rc.d | grep \'*$\' > services_list.txt")
+   else:
+      print("[!] Unable to retrieve services: This Linux distro may not be fully supported by Intersect")
+
+   os.system("mount -l > mount.txt")
    os.system("cat /etc/sysctl.conf > sysctl.txt")
    os.system("find /var/log -type f -exec ls -la {} \; > loglist.txt")
    os.system("uname -a > distro_kernel.txt")
@@ -170,6 +190,8 @@ def GetCredentials():
     os.chdir(Temp_Dir+"/credentials/")
     os.system('getent passwd > passwd.txt')
     os.system('getent shadow > shadow.txt')
+    os.system("find / -maxdepth 3 -name .ssh > ssh_locations.txt")
+
     if os.path.isfile("/etc/master.passwd") is True:
         shutil.copy2("/etc/master.passwd", Temp_Dir+"/credentials/")
     os.system('cat /etc/sudoers > sudoers.txt')
@@ -192,6 +214,7 @@ def GetCredentials():
     shutil.copy2(Home_Dir+'/.bash_history', Temp_Dir+"/credentials/bash_history.txt")
     if os.path.isfile("/etc/gshadow") is True:
         shutil.copy2("/etc/gshadow", Temp_Dir+"/credentials/")
+
     os.system("lastlog > lastlog.txt")
     os.system("last > last.txt")
     os.system("getent aliases > mail_aliases.txt")
@@ -202,15 +225,18 @@ def NetworkInfo():
    os.mkdir(Temp_Dir+"/network")
    networkdir = (Temp_Dir+"/network")
    os.chdir(networkdir) 
+
    proc = Popen('netstat --tcp --listening',
         shell=True,
         stdout=PIPE,
         )
    output = proc.communicate()[0]
+
    file = open("nstat.txt","a")
    for items in output:
        file.write(items),
    file.close() 
+
    os.system("lsof -nPi > lsof.txt")
    ports = ["nstat.txt","lsof.txt"]
    content = ''
@@ -228,6 +254,7 @@ def NetworkInfo():
        content = content + '\n' + open(f).read()
    open('NetworkInfo.txt','wb').write(content)
    os.system("rm localIP.txt hostname.txt ifconfig.txt")
+
    if os.path.exists("/etc/hosts.deny") is True:
         shutil.copy2("/etc/hosts.deny", networkdir)
    if os.path.exists("/etc/hosts.allow") is True:
