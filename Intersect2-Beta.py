@@ -63,10 +63,10 @@ def usage():
    print("  -d --daemon         run Intersect as a background process")
    print("  -o --os-info        os/distro, users, devices, cronjobs, installed apps, etc")
    print("  -n --network        detailed network info")
-   print("  -l --live-hosts      find live hosts on network")
+   print("  -l --live-hosts     find live hosts on network")
    print("  -c --credentials    locate and save user/system credentials")
    print("  -p --protection     locate commonly installed AV, FW's and extras")
-   print("  -a --all-tests      run all and archive final reports *scapy required")
+   print("  -a --all-tests      run all local tests and tar reports *scapy required")
    print("  -t --tar            make archive of final reports")
    print("  -s --scrub          scrubs current user/ip from utmp, wtmp & lastlog")
    print("  -b --bind           opens bindshell on port 443")  
@@ -114,7 +114,7 @@ def environment():
    
    os.system("clear")
 
-   print("[-] Creating temporary working environment....")
+   print("[+] Creating temporary working environment....")
    os.chdir(Home_Dir)
    if os.path.exists(Temp_Dir) is True:
        os.system("rm -rf "+Temp_Dir)
@@ -124,7 +124,7 @@ def environment():
    print "[!] Reports will be saved in: %s" % Temp_Dir
   
 def Gather_OS():
-   print("[-] Collecting operating system and user information....\n")
+   print("[+] Collecting operating system and user information....\n")
    os.mkdir(Temp_Dir+"/osinfo/")
    os.mkdir(Temp_Dir+"/configs/")
    os.chdir(Temp_Dir+"/osinfo/")
@@ -185,7 +185,7 @@ def Gather_OS():
    
 def GetCredentials():
     # Feature is being rewritten to speed up process and avoid non-root permission issues
-    print("[-] Collecting user and system credentials....\n")
+    print("[+] Collecting user and system credentials....\n")
     os.mkdir(Temp_Dir+"/credentials")
     os.chdir(Temp_Dir+"/credentials/")
     os.system('getent passwd > passwd.txt')
@@ -221,7 +221,7 @@ def GetCredentials():
 
 def NetworkInfo():
     # Fix getGateway
-   print("[-] Collecting network info: services, ports, active connections, dns, gateways, etc...\n")
+   print("[+] Collecting network info: services, ports, active connections, dns, gateways, etc...\n")
    os.mkdir(Temp_Dir+"/network")
    networkdir = (Temp_Dir+"/network")
    os.chdir(networkdir) 
@@ -267,7 +267,7 @@ def NetworkMap():
    # Add service identification via socket for all open ports
    # Add traceroute after finding live hosts. Send all results to graph report.
    
-    print("[-] Searching for live hosts...\n")
+    print("[+] Searching for live hosts...\n")
     os.mkdir(Temp_Dir+"/hosts")
     os.chdir(Temp_Dir+"/hosts")
     conf.verb=0
@@ -335,13 +335,13 @@ def FindProtect():
     # This is just a temporary way of doing it while I finish rewriting this feature and
     # add the rest of the applications that we try to find. 
     
-    print("[-] Finding system protection applications....\n")
+    print("[+] Finding system protection applications....\n")
     os.mkdir(Temp_Dir+"/protection")
     protectiondir = (Temp_Dir+"/protection")
     os.chdir(protectiondir)
     #if os.path.exists("/etc/snort/snort.conf") is True:
     #    shutil.copy2("/etc/snort/snort.conf", Temp_Dir+"/configs/")
-    print("[-] Serching for misc extras (netcat, perl, gcc, tcpdump, etc)....")
+    print("[+] Serching for misc extras (netcat, perl, gcc, tcpdump, etc)....")
     os.system("""
     whereis truecrypt > tc.txt && whereis bulldog > bulldog.txt && whereis ufw > ufw.txt && 
     whereis iptables > ipt.txt && whereis logrotate.txt > logr.txt && whereis logwatch > logw.txt && 
@@ -366,7 +366,7 @@ def ScrubLog():
   try:
     Current_User = os.getlogin()
   except OSError:
-    print "[!] Cannot find user in logs (Did you already 'scrub'?')"
+    print "[!] Cannot find user in logs. Did you all ready run --scrub ?"
     return
     
   newUtmp = scrubFile(UTMP_FILEPATH, Current_User)
