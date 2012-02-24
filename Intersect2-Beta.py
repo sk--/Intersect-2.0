@@ -552,8 +552,13 @@ def bindShell():
              )
         stdout, stderr = proc.communicate()
         if cmd.startswith('cd'):
-            os.chdir(cmd[3:].replace('\n',''))
-            conn.send("\nIntersect"+str(os.getcwd())+" $ ")
+	     destination = cmd[3:].replace('\n','')
+             if os.path.isdir(destination):
+	      os.chdir(destination)
+	      conn.send("\nIntersect"+str(os.getcwd())+" $ ")
+             else:
+	      conn.send("[!] Directory does not exist") 
+	      conn.send("\nIntersect"+str(os.getcwd())+" $ ")
         elif cmd.startswith('adduser'):
             strip = cmd.split(" ")
             acct = strip[1]
